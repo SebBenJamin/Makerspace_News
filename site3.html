@@ -74,6 +74,10 @@
       color: #ccc;
       margin-left: 0.3em;
     }
+    .news-text {
+      white-space: normal;   /* allows long text to wrap */
+      word-wrap: break-word; /* breaks really long words if needed */
+    }
 
     /* --- THINGSBOARD --- */
     #thingsboard {
@@ -181,7 +185,7 @@
           div.innerHTML = `
             <span class="news-date">${item.Datum}</span>
             <span class="news-category">[${item.Kategorie}]</span>
-            <div class="news-text">${item.Nachricht}</div>
+            <div class="news-text">${item.Nachricht }</div>
           `;
           container.appendChild(div);
         });
@@ -194,5 +198,6 @@
   </script>
 </body>
 </html>
+
 
 

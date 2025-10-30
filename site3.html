@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="600"> <!-- Seite alle 10 Minuten neu laden -->
+  <title>Makerspace Info-Display</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1a1a1a;
+      color: #ffffff;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 0.15fr 0.35fr 0.5fr; /* Verhältnis News / Dashboard / Kalender */
+    }
+    header {
+      text-align: center;
+      padding: 10px;
+      font-size: 2em;
+      background-color: #111111;
+      border-bottom: 4px solid #FF6600;
+    }
+    section {
+      overflow: hidden;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* --- NEWS-BEREICH OBEN --- */
+    #news-container {
+      height: 30vh;
+      overflow-y: auto;
+      padding: 20px;
+      background-color: #181818;
+    }
+    h2 {
+      color: #FF6600;
+      font-size: 1.5em;
+      margin-bottom: 10px;
+    }
+    .news-item {
+      margin-bottom: 1.2em;
+    }
+    .news-date {
+      font-weight: bold;
+      color: #FF6600;
+    }
+    .news-category {
+      font-style: italic;
+      color: #cccccc;
+    }
+
+    /* --- THINGSBOARD IN DER MITTE --- */
+    #thingsboard {
+      height: 35vh;
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* --- KALENDER UNTEN --- */
+    #calendar {
+      height: 35vh;
+    }
+  </style>
+</head>
+<body>
+  <header>🛠 Makerspace Info-Display</header>
+
+  <!-- NEWS OBEN -->
+  <section id="news-container">
+    <h2>Aktuelle News</h2>
+    <div id="news-list">Lade News...</div>
+  </section>
+
+  <!-- THINGSBOARD IN DER MITTE -->
+  <section id="thingsboard">
+    <div class="card">
+      <iframe
+        width="1024"
+        height="512"
+        src="https://thingsboard.cloud/dashboard/c01af0c0-fb06-11ed-abbc-85b318d1187f?publicId=d0f9f0b0-c731-11ee-80d2-474e1902aece"
+        frameborder="0"
+        allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </section>
+
+  <!-- KALENDER UNTEN -->
+  <section id="calendar">
+    <iframe src="https://calendar.google.com/calendar/embed?src=YOUR_CALENDAR_ID&ctz=Europe/Berlin"></iframe>
+  </section>
+
+  <script>
+    // Google Sheet CSV-URL für die News
+    const sheetUrl = "https://corsproxy.io/?" + encodeURIComponent("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_F37UWSkCr0FSFuJOB5Bv1bogq_YVRGEjk-TZnYk7tsvgnE9Zx2LowfSCquPioHQxn3Zp5yJKtPcF/pub?gid=0&single=true&output=csv");
+
+    fetch(sheetUrl)
+      .then(response => response.text())
+      .then(csvText => {
+        const lines = csvText.split("\n").filter(l => l.trim().length > 0);
+        const headers = lines[0].split(",");
+        const result = [];
+
+        for (let i = 1; i < lines.length; i++) {
+          const parts = lines[i].split(",");
+          const obj = {};
+          headers.forEach((h, j) => obj[h.trim()] = parts[j] ? parts[j].trim() : "");
+          result.push(obj);
+        }
+
+        // Sortieren nach Datum (neu → alt)
+        result.sort((a, b) => new Date(b.Datum) - new Date(a.Datum));
+
+        const container = document.getElementById("news-list");
+        container.innerHTML = "";
+        result.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "news-item";
+          div.innerHTML = `
+            <span class="news-date">${item.Datum}</span> 
+            <span class="news-category">[${item.Kategorie}]</span> 
+            <span class="news-text">${item.Nachricht}</span>
+          `;
+          container.appendChild(div);
+        });
+      })
+      .catch(err => {
+        document.getElementById("news-list").innerText = "Fehler beim Laden der News.";
+        console.error(err);
+      });
+  </script>
+</body>
+</html>
